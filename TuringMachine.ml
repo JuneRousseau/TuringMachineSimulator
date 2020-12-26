@@ -128,6 +128,23 @@ let isAccepted (w: word) (m : turingMachine) (t : time): bool =
     compute (q_0,init_left,init_right) m t
 
 
+let isCorrectTuringMachine (m : turingMachine) : bool =
+  let (states,sigma,blank,gamma,start,accepts,delta)=m in
+    if (not (List.for_all (fun s -> List.mem s gamma) sigma))
+    then (Printf.printf "Sigma isn't include in gamma\n" ; false)
+    else (if (not (List.mem blank gamma))
+          then (Printf.printf "The blank symbol isn't include in gamma\n" ; false)
+          else (if (not (List.mem start states))
+                then (Printf.printf "The start state isn't include in the states list\n" ; false)
+                else (if (not (List.for_all (fun s -> List.mem s states) accepts))
+                      then (Printf.printf "Accepts states isn't include in the states list\n" ; false)
+                      else (Printf.printf "TODO: check delta\n" ; true)
+                      )
+                )
+            )
+
+
+
 
 (*EXAMPLES
 

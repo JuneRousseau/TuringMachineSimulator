@@ -9,8 +9,9 @@ let _ =
     let tm,w,t= Parser.parse_spec token_stream in
 
     (* Print LLVM IR *)
-    let accepted = isAccepted w tm t in
-    print_endline (string_of_bool accepted)
+    if isCorrectTuringMachine tm
+    then let accepted = isAccepted w tm t in print_endline (string_of_bool accepted)
+    else Printf.printf "The given specification isn't a correct Turing Machine\n" ; exit 1
 
   with
     Lexer.Unexpected_character e ->
