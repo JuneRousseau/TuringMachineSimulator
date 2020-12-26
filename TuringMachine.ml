@@ -33,8 +33,8 @@ let string_of_transition (t : transition) : string =
 let string_of_configuration (config: configuration) : string =
   let (q,l,r)=config in
   match r with
-  | [] -> "( State "^(string_of_state q)^", Strip |..."^string_of_strip (List.rev l)^"[_]"^"...|  )"
-  | x::t -> "( State "^(string_of_state q)^", Strip |..."^string_of_strip (List.rev l)^"["^(string_of_symbol x)^"] "^string_of_strip t^"...| )"
+  | [] -> "( State "^(string_of_state q)^", Strip |...  _   _  "^string_of_strip (List.rev l)^"[_]  _  ...|  )"
+  | x::t -> "( State "^(string_of_state q)^", Strip |...  _   _  "^string_of_strip (List.rev l)^"["^(string_of_symbol x)^"] "^string_of_strip t^" _   _  ...| )"
 
 
 
@@ -43,14 +43,14 @@ let checkSymbol (s: symbol) (blank : symbol) (strip : symbol list) : bool =
     | [] -> s=blank
     | x::r -> x=s
 
-let shift_left (left : symbol list) (right : symbol list) : ((symbol list)*(symbol list)) =
+let shift_left (left : symbol list) (right : symbol list) (blank : symbol): ((symbol list)*(symbol list)) =
   match left with
-    | [] -> assert false
+    | [] -> [], blank::right
     | x::r -> r,x::right
 
-let shift_right (left : symbol list) (right : symbol list) : ((symbol list)*(symbol list)) =
+let shift_right (left : symbol list) (right : symbol list) (blank : symbol): ((symbol list)*(symbol list)) =
   match right with
-    | [] -> assert false
+    | [] -> blank::left,[]
     | x::r -> x::left,r
 
 
@@ -59,14 +59,14 @@ let applyTransition (t : transition) (config: configuration)  (m: turingMachine)
   let (current_state, left_strip, right_strip)= config in
   let (_,_,b,_,_,_,_)=m in
   match move with
-    | Stay -> config
+    | Stay -> dest_state,left_strip,right_strip
     | Left -> if start_state=current_state
               then (if (checkSymbol start_symbol b right_strip)
                     then (let right_strip=
                             (match right_strip with
                               | _::rest -> (writing_symbol::rest)
                               | _ -> [writing_symbol]) in
-                            let new_left,new_right=(shift_left left_strip right_strip) in
+                            let new_left,new_right=(shift_left left_strip right_strip b) in
                             dest_state,new_left,new_right)
                     else config
                     )
@@ -78,7 +78,7 @@ let applyTransition (t : transition) (config: configuration)  (m: turingMachine)
                       (match right_strip with
                         | _::rest -> (writing_symbol::rest)
                         | _ -> [writing_symbol]) in
-                      let new_left,new_right=(shift_right left_strip right_strip) in
+                      let new_left,new_right=(shift_right left_strip right_strip b) in
                       dest_state,new_left,new_right
                     )
                     else config
