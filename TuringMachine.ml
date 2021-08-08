@@ -37,7 +37,6 @@ let string_of_configuration (config: configuration) : string =
   | x::t -> "( State "^(string_of_state q)^", Strip |...  _   _  "^string_of_strip (List.rev l)^"["^(string_of_symbol x)^"] "^string_of_strip t^" _   _  ...| )"
 
 
-
 let checkSymbol (s: symbol) (blank : symbol) (strip : symbol list) : bool =
   match strip with
   | [] -> s=blank
@@ -108,7 +107,7 @@ let rec find_transition (config: configuration) (delta : transition list) (blank
 (*compute the next configuration of the Turing Machine m from the current c
   onfiguration config *)
 let rec compute (config: configuration) (m : turingMachine) (t : time): bool =
-  let debug= print_string ("t: "^(string_of_int t)^"\t"^(string_of_configuration config)^"\n") in
+  (* let debug= print_string ("t: "^(string_of_int t)^"\t"^(string_of_configuration config)^"\n") in *)
   match t with
   | 0 -> false
   | _ ->  let (q,_,_)=config in
@@ -138,8 +137,7 @@ let isCorrectTuringMachine (m : turingMachine) : bool =
               then (Printf.printf "The start state isn't include in the states list\n" ; false)
               else (if (not (List.for_all (fun s -> List.mem s states) accepts))
                     then (Printf.printf "Accepts states isn't include in the states list\n" ; false)
-                    else (Printf.printf "TODO: check delta\n" ; true)
-                   )
+                    else true) (* (Printf.printf "TODO: check delta\n" ; true) *)
              )
        )
 
