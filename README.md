@@ -1,2 +1,4 @@
 # Turing Machine Simulator
-TODO
+
+To compile the project: `make main.native`
+To use the simulator: `./main.native < $turingMachineFile`

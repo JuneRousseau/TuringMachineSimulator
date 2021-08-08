@@ -10,7 +10,7 @@ type turingMachine= (state list)*(alphabet)*(symbol)*(alphabet)*(state)*((state)
 type configuration= state*(symbol list)*(symbol list)
 
 let string_of_move (m : move) : string =
- match m with
+  match m with
   | Left -> "Left"
   | Right -> "Right"
   | Stay -> "Stay"
@@ -40,18 +40,18 @@ let string_of_configuration (config: configuration) : string =
 
 let checkSymbol (s: symbol) (blank : symbol) (strip : symbol list) : bool =
   match strip with
-    | [] -> s=blank
-    | x::r -> x=s
+  | [] -> s=blank
+  | x::r -> x=s
 
 let shift_left (left : symbol list) (right : symbol list) (blank : symbol): ((symbol list)*(symbol list)) =
   match left with
-    | [] -> [], blank::right
-    | x::r -> r,x::right
+  | [] -> [], blank::right
+  | x::r -> r,x::right
 
 let shift_right (left : symbol list) (right : symbol list) (blank : symbol): ((symbol list)*(symbol list)) =
   match right with
-    | [] -> blank::left,[]
-    | x::r -> x::left,r
+  | [] -> blank::left,[]
+  | x::r -> x::left,r
 
 
 let applyTransition (t : transition) (config: configuration)  (m: turingMachine) : (configuration) =
@@ -59,116 +59,116 @@ let applyTransition (t : transition) (config: configuration)  (m: turingMachine)
   let (current_state, left_strip, right_strip)= config in
   let (_,_,b,_,_,_,_)=m in
   match move with
-    | Stay -> dest_state,left_strip,right_strip
-    | Left -> if start_state=current_state
-              then (if (checkSymbol start_symbol b right_strip)
-                    then (let right_strip=
-                            (match right_strip with
-                              | _::rest -> (writing_symbol::rest)
-                              | _ -> [writing_symbol]) in
-                            let new_left,new_right=(shift_left left_strip right_strip b) in
-                            dest_state,new_left,new_right)
-                    else config
-                    )
-              else config
+  | Stay -> dest_state,left_strip,right_strip
+  | Left -> if start_state=current_state
+    then (if (checkSymbol start_symbol b right_strip)
+          then (let right_strip=
+                  (match right_strip with
+                   | _::rest -> (writing_symbol::rest)
+                   | _ -> [writing_symbol]) in
+                let new_left,new_right=(shift_left left_strip right_strip b) in
+                dest_state,new_left,new_right)
+          else config
+         )
+    else config
 
-    | Right -> if start_state=current_state
-               then (if (checkSymbol start_symbol b right_strip)
-                    then (let right_strip=
-                      (match right_strip with
-                        | _::rest -> (writing_symbol::rest)
-                        | _ -> [writing_symbol]) in
-                      let new_left,new_right=(shift_right left_strip right_strip b) in
-                      dest_state,new_left,new_right
-                    )
-                    else config
-                    )
-               else config
+  | Right -> if start_state=current_state
+    then (if (checkSymbol start_symbol b right_strip)
+          then (let right_strip=
+                  (match right_strip with
+                   | _::rest -> (writing_symbol::rest)
+                   | _ -> [writing_symbol]) in
+                let new_left,new_right=(shift_right left_strip right_strip b) in
+                dest_state,new_left,new_right
+               )
+          else config
+         )
+    else config
 
 type word = symbol list
 type time = int
 
 (*find which transition is applyable (only works with deterministic Turing Machine)*)
 let rec find_transition (config: configuration) (delta : transition list) (blank : symbol): transition option=
-    match delta with
-    | [] -> None (*base case : the transition list is empty*)
-    | ((q,s),x)::rest -> (*recursive case : there exist a transition from the state q and the symbol s*)
-      let (cur_q,_,r)=config in
-        (if q=cur_q (*the current state is the same as the transition found*)
-        then (match r with  (*check the symbol*)
-                | [] -> if s=blank then Some ((q,s),x) else find_transition config rest blank
-                | cur_s::_ ->
-                    if cur_s=s
-                    then Some ((q,s),x)
-                    else find_transition config rest blank
-                )
-        else find_transition config rest blank)
+  match delta with
+  | [] -> None (*base case : the transition list is empty*)
+  | ((q,s),x)::rest -> (*recursive case : there exist a transition from the state q and the symbol s*)
+    let (cur_q,_,r)=config in
+    (if q=cur_q (*the current state is the same as the transition found*)
+     then (match r with  (*check the symbol*)
+         | [] -> if s=blank then Some ((q,s),x) else find_transition config rest blank
+         | cur_s::_ ->
+           if cur_s=s
+           then Some ((q,s),x)
+           else find_transition config rest blank
+       )
+     else find_transition config rest blank)
 
 
 (*compute the next configuration of the Turing Machine m from the current c
-onfiguration config *)
+  onfiguration config *)
 let rec compute (config: configuration) (m : turingMachine) (t : time): bool =
   let debug= print_string ("t: "^(string_of_int t)^"\t"^(string_of_configuration config)^"\n") in
   match t with
-    | 0 -> false
-    | _ ->  let (q,_,_)=config in
-            let (_,_,b,_,_,f,delta)=m in
-              match (find_transition config delta b) with
-                | None ->  List.mem q f
-                | Some tr ->  let new_config = (applyTransition tr config m) in
-                              compute new_config m (t-1)
+  | 0 -> false
+  | _ ->  let (q,_,_)=config in
+    let (_,_,b,_,_,f,delta)=m in
+    match (find_transition config delta b) with
+    | None ->  List.mem q f
+    | Some tr ->  let new_config = (applyTransition tr config m) in
+      compute new_config m (t-1)
 
 (*a word w is accepted in a time t by the Turing Machine m if it is possible to
-reach a final state with the initial configuration (_,w) in less than t
-iterations*)
+  reach a final state with the initial configuration (_,w) in less than t
+  iterations*)
 let isAccepted (w: word) (m : turingMachine) (t : time): bool =
   let init_left=[] in
   let init_right=w in
   let (_,_,_,_,q_0,_,_)=m in
-    compute (q_0,init_left,init_right) m t
+  compute (q_0,init_left,init_right) m t
 
 
 let isCorrectTuringMachine (m : turingMachine) : bool =
   let (states,sigma,blank,gamma,start,accepts,delta)=m in
-    if (not (List.for_all (fun s -> List.mem s gamma) sigma))
-    then (Printf.printf "Sigma isn't include in gamma\n" ; false)
-    else (if (not (List.mem blank gamma))
-          then (Printf.printf "The blank symbol isn't include in gamma\n" ; false)
-          else (if (not (List.mem start states))
-                then (Printf.printf "The start state isn't include in the states list\n" ; false)
-                else (if (not (List.for_all (fun s -> List.mem s states) accepts))
-                      then (Printf.printf "Accepts states isn't include in the states list\n" ; false)
-                      else (Printf.printf "TODO: check delta\n" ; true)
-                      )
-                )
-            )
+  if (not (List.for_all (fun s -> List.mem s gamma) sigma))
+  then (Printf.printf "Sigma isn't include in gamma\n" ; false)
+  else (if (not (List.mem blank gamma))
+        then (Printf.printf "The blank symbol isn't include in gamma\n" ; false)
+        else (if (not (List.mem start states))
+              then (Printf.printf "The start state isn't include in the states list\n" ; false)
+              else (if (not (List.for_all (fun s -> List.mem s states) accepts))
+                    then (Printf.printf "Accepts states isn't include in the states list\n" ; false)
+                    else (Printf.printf "TODO: check delta\n" ; true)
+                   )
+             )
+       )
 
 
 
 
 (*EXAMPLES
 
-let zNunN_states=[State 0;State 1;State 2;State 3;State 4];;
-let sigma_bin=[Symbol "0";Symbol "1"];;
-let blank_symb=Symbol "B";;
-let gamma_bin=[Symbol "0";Symbol "1";Symbol "X";Symbol "Y"; blank_symb];;
-let start_state=State 0;;
-let accept_state=[State 6];;
-let delta=[
-(State 0, Symbol "0"), (State 1, Symbol "X", Right);
-(State 0, Symbol "Y"), (State 3, Symbol "Y", Right);
-(State 1, Symbol "0"), (State 1, Symbol "0", Right);
-(State 1, Symbol "1"), (State 2, Symbol "Y", Left);
-(State 1, Symbol "Y"), (State 1, Symbol "Y", Right);
-(State 2, Symbol "0"), (State 2, Symbol "0", Left);
-(State 2, Symbol "X"), (State 0, Symbol "X", Right);
-(State 2, Symbol "Y"), (State 2, Symbol "Y", Left);
-(State 3, Symbol "Y"), (State 3, Symbol "Y", Right);
-(State 3, blank_symb), (State 4, blank_symb, Right);
-]
+  let zNunN_states=[State 0;State 1;State 2;State 3;State 4];;
+  let sigma_bin=[Symbol "0";Symbol "1"];;
+  let blank_symb=Symbol "B";;
+  let gamma_bin=[Symbol "0";Symbol "1";Symbol "X";Symbol "Y"; blank_symb];;
+  let start_state=State 0;;
+  let accept_state=[State 6];;
+  let delta=[
+  (State 0, Symbol "0"), (State 1, Symbol "X", Right);
+  (State 0, Symbol "Y"), (State 3, Symbol "Y", Right);
+  (State 1, Symbol "0"), (State 1, Symbol "0", Right);
+  (State 1, Symbol "1"), (State 2, Symbol "Y", Left);
+  (State 1, Symbol "Y"), (State 1, Symbol "Y", Right);
+  (State 2, Symbol "0"), (State 2, Symbol "0", Left);
+  (State 2, Symbol "X"), (State 0, Symbol "X", Right);
+  (State 2, Symbol "Y"), (State 2, Symbol "Y", Left);
+  (State 3, Symbol "Y"), (State 3, Symbol "Y", Right);
+  (State 3, blank_symb), (State 4, blank_symb, Right);
+  ]
 
-let turingMachinezNunN=(zNunN_states,sigma_bin,blank_symb,gamma_bin,start_state, accept_state, delta);;
+  let turingMachinezNunN=(zNunN_states,sigma_bin,blank_symb,gamma_bin,start_state, accept_state, delta);;
 
-let wordTest=[Symbol "0";Symbol "0";Symbol "0";Symbol "1";Symbol "1";Symbol "1"];;
+  let wordTest=[Symbol "0";Symbol "0";Symbol "0";Symbol "1";Symbol "1";Symbol "1"];;
 
-print_string (string_of_bool (isAccepted wordTest turingMachinezNunN 50));;*)
+  print_string (string_of_bool (isAccepted wordTest turingMachinezNunN 50));;*)
